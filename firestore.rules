@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /inquiries/{id} {
+      allow create: if request.resource.data.keys().hasOnly([
+          "name", "phone", "line", "modelId", "modelName",
+          "battery", "addons", "total", "note", "source", "createdAt"
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 80
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() >= 9
+        && request.resource.data.phone.size() <= 12
+        && request.resource.data.line is string
+        && request.resource.data.line.size() <= 40
+        && request.resource.data.note is string
+        && request.resource.data.note.size() <= 500
+        && request.resource.data.modelName is string
+        && request.resource.data.modelName.size() <= 80
+        && request.resource.data.addons is list
+        && request.resource.data.addons.size() <= 8
+        && request.resource.data.source in ["contact", "model"];
+
+      allow read: if request.auth != null
+        && request.auth.token.email == "sahadiesel@gmail.com";
+
+      allow update, delete: if false;
+    }
+  }
+}
