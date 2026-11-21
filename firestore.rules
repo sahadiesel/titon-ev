@@ -1,9 +1,57 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function owner() {
+      return request.auth != null
+        && request.auth.token.email == "sahadiesel@gmail.com";
+    }
+
+    function userPath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function profileExists() {
+      return request.auth != null && exists(userPath());
+    }
+
+    function profile() {
+      return get(userPath()).data;
+    }
+
+    function isRole(role) {
+      return profileExists()
+        && profile().status == "active"
+        && profile().role == role;
+    }
+
+    function isAdmin() {
+      return owner() || isRole("admin");
+    }
+
+    function isPartner() {
+      return isRole("partner");
+    }
+
+    function isViewer() {
+      return isRole("viewer");
+    }
+
+    function canReadBackoffice() {
+      return isAdmin() || isPartner() || isViewer();
+    }
+
+    function two(n) {
+      return n < 10 ? "0" + string(n) : string(n);
+    }
+
+    function todayThai() {
+      let shifted = request.time + duration.value(7, "h");
+      return string(shifted.year()) + "-" + two(shifted.month()) + "-" + two(shifted.day());
+    }
+
     match /inquiries/{id} {
       allow create: if request.resource.data.keys().hasOnly([
-          "name", "phone", "line", "modelId", "modelName",
+          "name", "phone", "line", "area", "modelId", "modelName",
           "battery", "addons", "total", "note", "source", "createdAt"
         ])
         && request.resource.data.name is string
@@ -14,6 +62,7 @@ service cloud.firestore {
         && request.resource.data.phone.size() <= 12
         && request.resource.data.line is string
         && request.resource.data.line.size() <= 40
+        && (!("area" in request.resource.data) || (request.resource.data.area is string && request.resource.data.area.size() <= 80))
         && request.resource.data.note is string
         && request.resource.data.note.size() <= 500
         && request.resource.data.modelName is string
@@ -22,10 +71,84 @@ service cloud.firestore {
         && request.resource.data.addons.size() <= 8
         && request.resource.data.source in ["contact", "model"];
 
-      allow read: if request.auth != null
-        && request.auth.token.email == "sahadiesel@gmail.com";
-
+      allow read: if isAdmin() || isPartner() || isViewer();
       allow update, delete: if false;
+
+      match /notes/{noteId} {
+        allow read: if isAdmin() || isPartner() || isViewer();
+        allow create: if (isAdmin() || isPartner())
+          && request.resource.data.keys().hasOnly(["text", "date", "recordedBy", "recordedByEmail", "recordedByUid", "createdAt"])
+          && request.resource.data.text is string
+          && request.resource.data.text.size() >= 1
+          && request.resource.data.text.size() <= 300
+          && request.resource.data.date is string
+          && request.resource.data.date.size() <= 20
+          && request.resource.data.recordedBy is string
+          && request.resource.data.recordedBy.size() >= 1
+          && request.resource.data.recordedBy.size() <= 80
+          && request.resource.data.recordedByEmail == request.auth.token.email
+          && request.resource.data.recordedByUid == request.auth.uid;
+        allow update: if false;
+        allow delete: if isAdmin() || isPartner();
+      }
+    }
+
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /images/{id} {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.data.keys().hasOnly(["src"])
+        && request.resource.data.src is string
+        && request.resource.data.src.size() > 20
+        && request.resource.data.src.size() < 900000;
+    }
+
+    match /cashbook/{id} {
+      allow read: if canReadBackoffice();
+      allow delete: if isAdmin() || isPartner();
+      allow create: if (isAdmin() || isPartner())
+        && request.resource.data.direction in ["in", "out"]
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && request.resource.data.amount < 100000000
+        && request.resource.data.note is string
+        && request.resource.data.note.size() <= 200
+        && request.resource.data.date == todayThai()
+        && request.resource.data.recordedBy is string
+        && request.resource.data.recordedBy.size() >= 1
+        && request.resource.data.recordedBy.size() <= 80
+        && request.resource.data.recordedByEmail == request.auth.token.email
+        && request.resource.data.recordedByUid == request.auth.uid;
+    }
+
+    match /users/{uid} {
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == uid);
+      allow create: if isAdmin()
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 80
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 12
+        && (request.resource.data.phone.size() == 0 || request.resource.data.phone.size() >= 9)
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 120
+        && request.resource.data.role in ["admin", "partner", "viewer"]
+        && request.resource.data.status in ["active", "inactive"];
+      allow update: if isAdmin()
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 80
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 12
+        && (request.resource.data.phone.size() == 0 || request.resource.data.phone.size() >= 9)
+        && request.resource.data.role in ["admin", "partner", "viewer"]
+        && request.resource.data.status in ["active", "inactive"]
+        && request.resource.data.email == resource.data.email;
+      allow delete: if isAdmin() && request.auth.uid != uid;
     }
   }
 }

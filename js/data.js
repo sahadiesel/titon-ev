@@ -2,7 +2,8 @@ const CONTACTS = {
   joe: { name: "คุณโจ้", phone: "083-541-5007", tel: "0835415007" },
   pu: { name: "คุณปุ๊", phone: "091-038-3636", tel: "0910383636" },
   line: "@hatyai-ev",
-  lineUrl: "https://line.me/R/ti/p/@hatyai-ev",
+  lineUrl: "https://lin.ee/R3r5gUa",
+  email: "titonhatyai@gmail.com",
   hours: "จันทร์–เสาร์ 08:30–17:30 น."
 };
 
@@ -113,8 +114,8 @@ const MODELS = [
       { id: "li-45", name: "แบตลิเธียม 60V 45Ah", price: 40900, warranty: "ประกันแบต 3 ปี" }
     ],
     addons: [
-      { id: "roof-front", name: "เสริมหลังคาหน้า", price: 3000 },
-      { id: "roof-side", name: "เสริมหลังคาข้าง", price: 4000 }
+      { id: "roof-front", name: "เสริมหลังคาหน้า", price: 3000, group: "roof" },
+      { id: "roof-side", name: "เสริมหลังคายาว", price: 4000, group: "roof" }
     ],
     specs: [
       ["มอเตอร์", "1,200 W"],
@@ -130,7 +131,7 @@ const MODELS = [
       "จอดิจิตอล ไฟหน้า LED สวิตช์ไฟสูง-ต่ำ",
       "สวิตช์เดินหน้า-ถอยหลัง และแท่นใส่โทรศัพท์",
       "เลือกแบตลิเธียมได้ตอนสั่ง ประกันแบต 3 ปี",
-      "เสริมหลังคาหน้าหรือโครงข้างได้ต่างหาก",
+      "เสริมได้แค่หลังคาหน้าหรือหลังคายาว อย่างใดอย่างหนึ่ง",
       "มีสีเทาและสีแดงในใบปลิว"
     ]
   },
@@ -156,8 +157,8 @@ const MODELS = [
       { id: "li-60", name: "แบตลิเธียม 60V 60Ah", price: 48900, warranty: "ประกันแบต 3 ปี" }
     ],
     addons: [
-      { id: "roof-front", name: "เสริมหลังคาหน้า", price: 3000 },
-      { id: "roof-side", name: "เสริมหลังคาข้าง", price: 4000 }
+      { id: "roof-front", name: "เสริมหลังคาหน้า", price: 3000, group: "roof" },
+      { id: "roof-side", name: "เสริมหลังคายาว", price: 4000, group: "roof" }
     ],
     specs: [
       ["มอเตอร์", "1,600 W"],
@@ -199,8 +200,8 @@ const MODELS = [
       { id: "li-60", name: "แบตลิเธียม 60V 60Ah", price: 50900, warranty: "ประกันแบต 3 ปี" }
     ],
     addons: [
-      { id: "roof-front", name: "เสริมหลังคาหน้า", price: 3000 },
-      { id: "roof-side", name: "เสริมหลังคาข้าง", price: 4000 },
+      { id: "roof-front", name: "เสริมหลังคาหน้า", price: 3000, group: "roof" },
+      { id: "roof-side", name: "เสริมหลังคายาว", price: 4000, group: "roof" },
       { id: "dump", name: "ดัมพ์ไฟฟ้า", price: 9500 }
     ],
     specs: [
